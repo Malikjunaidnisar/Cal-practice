@@ -1,4 +1,7 @@
+from flask import Flask, render_template, request
 import random
+
+app = Flask(__name__)
 
 # Initialize the 3D game board
 game_board = [[[None for _ in range(4)] for _ in range(4)] for _ in range(3)]
@@ -19,40 +22,19 @@ for layer in range(3):
 # Initialize the move counter
 moves_left = 100
 
-# Game logic
-while True:
-    # Display the game board
-    print("Layer 1:")
-    for row in game_board[0]:
-        print(row)
-    print("Layer 2:")
-    for row in game_board[1]:
-        print(row)
-    print("Layer 3:")
-    for row in game_board[2]:
-        print(row)
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        layer = int(request.form['layer'])
+        row = int(request.form['row'])
+        col = int(request.form['col'])
+        card = game_board[layer-1][row-1][col-1]
 
-    # Get user input
-    layer = int(input("Enter the layer (1-3): "))
-    row = int(input("Enter the row (1-4): "))
-    col = int(input("Enter the column (1-4): "))
-    card = game_board[layer-1][row-1][col-1]
+        if card is not None and card != 0:
+            game_board[layer-1][row-1][col-1] = None
+            moves_left -= 1
 
-    # Check if the move is valid
-    if card is not None and card != 0:
-        # Perform the move
-        game_board[layer-1][row-1][col-1] = None
-        moves_left -= 1
-        print(f"Move {moves_left} left.")
-    else:
-        print("Invalid move. Try again!")
+    return render_template('index.html', game_board=game_board, moves_left=moves_left)
 
-    # Check if the game is won
-    if all(all(all(cell == 0 for cell in row) for row in layer) for layer in game_board):
-        print("Congratulations! You won!")
-        break
-
-    # Check if the game is lost
-    if moves_left == 0:
-        print("Game over! You lost.")
-        break
+if __name__ == '__main__':
+    app.run(debug=True)
